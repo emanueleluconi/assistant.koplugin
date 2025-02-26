@@ -14,12 +14,12 @@ local CONFIGURATION = {
             }
         },
         openai = {
-            model = "gpt-4o-mini", -- model list: https://platform.openai.com/docs/models
+            model = "chatgpt-4o-latest", -- model list: https://platform.openai.com/docs/models
             base_url = "https://api.openai.com/v1/chat/completions",
-            api_key = "your-openai-api-key",
+            api_key = "API",
             additional_parameters = {
                 temperature = 0.7,
-                max_tokens = 4096
+                max_tokens = 100000
             }
         },
         gemini = {
@@ -58,66 +58,143 @@ local CONFIGURATION = {
         long_highlight_threshold = 500,  -- Number of characters considered "long"
         system_prompt = "You are a helpful assistant that provides clear explanations.", -- Custom system prompt for the AI ("Ask" button) to override the default, to disable set to nil
         refresh_screen_after_displaying_results = true, -- Set to true to refresh the screen after displaying the results
-        show_dictionary_button_in_main_popup = true, -- Set to true to show the dictionary button in the main popup
-        dictionary_translate_to = "tr-TR", -- Set to the desired language code for the dictionary, nil to hide it
+        show_dictionary_button_in_main_popup = false, -- Set to true to show the dictionary button in the main popup
+        dictionary_translate_to = "nil", -- Set to the desired language code for the dictionary, nil to hide it
 
         -- Custom prompts for the AI (text = button text in the UI). system-prompt defaults to "You are a helpful assistant." if not set.
         prompts = {
-            translate = {
-                text = "Translate",
+            auto_flashcards = {
+                text = "Auto-Flashcards",
                 order = 1,
-                system_prompt = "You are a helpful translation assistant. Provide direct translations without additional commentary.",
-                user_prompt = "Please translate the following text to Turkish: ",
-                show_on_main_popup = true -- Show the button in main popup
+                system_prompt = "You are an professional agent that creates educational flashcards for spaced repetition systems.",
+                user_prompt = [[
+                You are a chatbot specialized in creating high-quality flashcards for Anki. Your goal is to generate high-quality flashcards based on the provided highlight from the document "{title}" by {author}. Use the highlight in combination with all your knowledge on the author, the document and the topic discussed to create high-quality, relevant flashcards.
+
+                Guidelines:
+
+                1. **Conciseness:** Each flashcard should focus on a single, specific concept or question.
+                    - Try to extract all the main relevant concepts contained in the highlight: sometimes they are clear, other times it may be required for you to generalize starting from the text in order to discover the relevant concepts to build flashcards on.
+                    - Avoid combining multiple ideas into one flashcard. If more than one flashcard is needed, you can create up to 3 but only if relevant and necessary. 
+                    - You have to use the minimum possible number of words for the answer of the flashcard, ensuring it is concise and very direct. The answer should not repeat parts of the question, ensuring that it is direct and easy to recall with precision.
+
+                2. **Clarity:** Ensure the wording of the flashcard is simple and easy to understand.
+                    - While creating the cue (question), you have to make sure that it is possible to answer precisely without having to reference the highlight. In order to enable so, you have to integrate in the question all the needed context while respecting the requirements for conciseness.
+                    - Optimize wording for quick recall during studying.
+                    - Avoid ambiguous language.
+                    - Promote Active Recall: Formulate questions that encourage the learner to actively retrieve information.
+                    - Write the flashcard following the same language of the reference material.
+                    - Eliminate unnecessary complexity. If a concept is too detailed, split it into multiple cards (up to 3).
+                    - Each flashcard should focus on an important concept. Do not include trivial details
+                    
+                3. **High-Quality Integration:** Use the highlight provided by the user and integrate the best of your knowledge on the topic and the source to enlarge the context. Use the enlarged context to create accurate and informative flashcards.
+                    - Use the highlight provided from the reference to better extract and generalize the main relevant points discussed in the highlight, and build flashcards on those points.
+                    - Where necessary, add yourself more context or refine the question for better learning.
+                    - Stay true to the content of the highlight.
+                    - If the content of the highlight or the content of the context are not sufficient to answer a specific question, use the best of your knowledge on the subject.
+
+                4. **Design questions to test understanding, not just recall**
+                    - Whenever possible, use “why” and “how” to test comprehension.
+                    - Encourage prompts that require synthesis of ideas.
+                    
+                5. **Flashcard Structure:** Produce flashcard with clear cue (question) and answer.
+                    - Format:
+                    [Question] :: [Answer]
+                    - Example:
+                    What process do plants use to make energy? :: Photosynthesis
+                    - Formulas: if question or answer require mathematical formulas, write them in Latex, ie. using `$` to mark in-line formulas (eg., $a^2 + b^2 = c^2$) and "$$" to mark block equations (eg., $$a^2 + b^2 = c^2$$)
+
+                To recap:
+                **Inputs:**
+                - You will be provided with:
+                    1. An highlight extractet from "{title}" by {author}.
+
+                **Your Task:**
+                - Understand what are main concepts discussed in the highlight that are worth to memorize and understand, so worth to create a flashcard on.
+                - Create a flashcard for each concept, never more than 3
+                - Prioritize clarity and focus on creating standalone flashcard that makes sense without additional context.
+                - Write the flashcards in the same language of the input provided.
+
+                **Output Format:**
+                [Refined Cue] :: [Answer]
+
+                ---
+
+                This is the highlight from "{title}" by {author}:
+                ==========
+                {highlight}
+                ==========
+                ]],
+                show_on_main_popup = true, -- Show the button in main popup,
+                require_input = false
             },
-            simplify = {
-                text = "Simplify",
+            custom_flashcards = {
+                text = "Flashcard",
                 order = 2,
-                system_prompt = "You are a helpful assistant that provides clear explanations.",
-                user_prompt = "Please simplify the following text in its own language: ",
-                show_on_main_popup = false -- Show the button in main popup    
-            },
-            explain = {
-                text = "Explain",
-                order = 3,
-                system_prompt = "You are a helpful assistant that explains complex topics clearly and concisely. Break down concepts into simple terms.",
-                user_prompt = "Please explain the following text. Answer in Turkish: ", 
-                show_on_main_popup = false -- Show the button in main popup    
-            },
-            summarize = {
-                text = "Summarize",
-                order = 4,
-                system_prompt = "You are a summarization expert. Provide clear, concise summaries that capture the main points.",
-                user_prompt = "Please provide a concise summary of the following text in its own language: ",
-                show_on_main_popup = false -- Show the button in main popup
-            },
-            historical_context = {
-                text = "Historical Context",
-                order = 5,
-                system_prompt = "You are a historical context expert. Provide relevant historical background and connections.",
-                user_prompt = "Explain the historical context of this text. Answer in Turkish: ",
-                show_on_main_popup = false -- Show the button in main popup      
-            },
-            key_points = {
-                text = "Key Points",
-                order = 6,
-                system_prompt = "You are a key points expert. Provide a concise list of key points from the text.",
-                user_prompt = "Please provide a concise list of key points from the following text. Answer in Turkish: ",
-                show_on_main_popup = false -- Show the button in main popup
-            },
-            ELI5 = {
-                text = "ELI5",
-                order = 7,
-                system_prompt = "You are an ELI5 expert. Provide simple, concise explanations for complex terms.",
-                user_prompt = "Please provide an ELI5 explanation. Answer in Turkish: ",
-                show_on_main_popup = false -- Show the button in main popup
-            },
-            grammar = {
-                text = "Grammar",
-                order = 8,
-                system_prompt = "You are a grammar expert.",
-                user_prompt = "Explain the grammar of the following text. Answer in Turkish: ",
-                show_on_main_popup = true -- Show the button in main popup
+                system_prompt = "You are an professional agent that creates educational flashcards for spaced repetition systems.",
+                user_prompt = [[
+                You are a chatbot specialized in creating high-quality flashcards for Anki. Your goal is to generate high-quality flashcards based on a draft question and the provided highlight from the document "{title}" by {author}. Use the draft question to generate a flashcard cue, and the highlight iin combination with all your knowledge on the author, the document and the topic discussed to generate an answer and create high-quality, relevant flashcards.
+
+                Guidelines:
+
+                1. **Conciseness:** Each flashcard should focus on a single, specific concept or question.
+                    - Rephrase the draft question to make it direct and precise, while keeping the focus of the original question.  
+                    - You have to use the minimum possible number of words for the answer of the flashcard, ensuring it is concise and very direct. The answer should not repeat parts of the question, ensuring that it is direct and easy to recall with precision.
+
+                2. **Clarity:** Ensure the wording of the flashcard is simple and easy to understand.
+                    - While rephrasing the cue (question), you have to make sure that it is possible to answer precisely without having to reference the highlight. In order to enable so, you have to integrate in the question all the needed context while respecting the requirements for conciseness.
+                    - Optimize wording for quick recall during studying.
+                    - Avoid ambiguous language.
+                    - Promote Active Recall: Formulate questions that encourage the learner to actively retrieve information.
+                    - Write the flashcard following the same language of the draft question.
+
+                3. **High-Quality Integration:** Use the highlight provided by the user and integrate the best of your knowledge on the topic and the source to enlarge the context. Use the enlarged context to create accurate and informative flashcard.
+                    - Use the highlight provided from the reference to better extract and generalize the main relevant points discussed in the highlight – sometimes, the reference provided is enough to respond to the original question, sometimes it is not: in those cases the reference doesn't have a clear answer, you have to use your knowledge.
+                    - If the content provided does not contain a precise, general answer to the original question, you have to use your knowledge on the subject to answer precisely. 
+                    - Where necessary, add context to the draft question for better recall, but never change its original focus.
+
+                4. **Design questions to test understanding, not just recall**
+                    - Whenever possible, use “why” and “how” to test comprehension.
+                    - Encourage prompts that require synthesis of ideas.
+                    
+                5. **Flashcard Structure:** Produce flashcard with clear cue (question) and answer.
+                    - Format:
+                    [Question] :: [Answer]
+                    - Example:
+                    What process do plants use to make energy? :: Photosynthesis
+                    - Formulas: if question or answer require mathematical formulas, write them in Latex, ie. using `$` to mark in-line formulas (eg., $a^2 + b^2 = c^2$) and "$$" to mark block equations (eg., $$a^2 + b^2 = c^2$$)
+
+
+                To recap:
+                **Inputs:**
+                - You will be provided with:
+                    1. An highlight extractet from "{title}" by {author}.
+                    2. A draft question.
+                    
+                **Your Task:**
+                - Rephrease the question to make it more suitable for active recall, more direct and clear, but without chaning its original focus.
+                - See if the highlight provided contains a precise answer to the question: if it does so, use it to formulate a precise answer to the question to create the flashcard; if it doesn0t have a precise answer to the original question, you have to use the best of your knowledge on the subject to create the answer.
+                - Create a flashcard using the question and the relevant answer respecting the guidelines above.
+                - Prioritize clarity and focus on creating standalone flashcard that makes sense without needing additional context.
+                - Write the flashcard in the same language of the input provided.
+                - **NOTE**: If the draft contains multiple questions in a single input, create one flashcard for each question following all the guidelines discussed so far.
+
+                **Output Format:**
+                [Refined Cue] :: [Answer]
+
+                ---
+
+                This is the highlight from "{title}" by {author}:
+                ==========
+                {highlight}
+                ==========
+
+                This is the draft question:
+                ==========
+                {extra_input}
+                ==========
+                ]],
+                show_on_main_popup = true, -- Show the button in main popup,
+                require_input = true
             }
         }
     }
